@@ -17,6 +17,7 @@ import json
 import logging
 import os
 import requests
+from requests.exceptions import RequestException, Timeout
 from scriptharness.actions import Action
 from scriptharness.exceptions import ScriptHarnessException, \
     ScriptHarnessTimeout, to_unicode
@@ -127,27 +128,31 @@ def download_url(url, path=None, timeout=None):
     if timeout is None:
         timeout = 10
     try:
-        start_time = time.time()
-        session = requests.Session()
-        session.mount(url, requests.adapters.HTTPAdapter(max_retries=5))
-        response = session.get(url, timeout=timeout, stream=True)
         with open(path, 'wb') as filehandle:
-            for chunk in response.iter_content(  # pragma: no branch
-                    chunk_size=1024):
-                if chunk:  # pragma: no branch
-                    filehandle.write(chunk)
-                    filehandle.flush()
-        return path
-    except requests.exceptions.RequestException as exc_info:
-        if time.time() >= start_time + timeout:
-            raise ScriptHarnessTimeout("Timeout downloading from url %s" % url,
-                                       exc_info)
-        raise ScriptHarnessException("Error downloading from url %s" % url,
-                                     exc_info)
+            try:
+                start_time = time.time()
+                session = requests.Session()
+                session.mount(url, requests.adapters.HTTPAdapter(max_retries=5))
+                response = session.get(url, timeout=timeout, stream=True)
+                with open(path, 'wb') as filehandle:
+                    for chunk in response.iter_content(  # pragma: no branch
+                            chunk_size=1024):
+                        if chunk:  # pragma: no branch
+                            filehandle.write(chunk)
+                            filehandle.flush()
+                return path
+            except RequestException as exc_info:
+                if isinstance(exc_info, Timeout) or \
+                        time.time() >= start_time + timeout:
+                    raise ScriptHarnessTimeout(
+                        "Timeout downloading from url %s" % url, exc_info
+                    )
+                raise ScriptHarnessException(
+                    "Error downloading from url %s" % url, exc_info
+                )
     except IOError as exc_info:
         raise ScriptHarnessException(
-            "Error writing downloaded contents to path %s" % path,
-            exc_info
+            "Error writing downloaded contents to path %s" % path, exc_info
         )
 
 

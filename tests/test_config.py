@@ -13,7 +13,8 @@ import os
 import requests
 from scriptharness.actions import Action
 import scriptharness.config as shconfig
-from scriptharness.exceptions import ScriptHarnessException
+from scriptharness.exceptions import ScriptHarnessException, \
+    ScriptHarnessTimeout
 import six
 import subprocess
 import sys
@@ -128,17 +129,29 @@ class TestUrlFunctionss(unittest.TestCase):
             contents = filehandle.read()
         self.assertEqual(contents, "")
 
-    @unittest.skipIf(os.name == 'nt',
-                     "windows downloads the cgi instead of running")
-    def test_timeout_download_url(self):
+    @mock.patch('scriptharness.config.requests')
+    def test_timeout_download_url(self, mock_requests):
         """test_config | Time out in download_url()
         """
-        with start_webserver() as (_, host):
-            self.assertRaises(
-                ScriptHarnessException,
-                shconfig.download_url, "%s/cgi-bin/timeout.cgi" % host,
-                timeout=.1
-            )
+        class Timeout(object):
+            """Test timeout class"""
+            @staticmethod
+            def mount(*args, **kwargs):
+                """raise Timeout"""
+                if args or kwargs:  # silence pylint
+                    pass
+                raise requests.exceptions.Timeout("test timeout")
+            @staticmethod
+            def silence_pyint():
+                """silence pylint"""
+                pass
+        timeout = Timeout()
+        mock_requests.Session.return_value = timeout
+        self.assertRaises(
+            ScriptHarnessTimeout,
+            shconfig.download_url, "http://fake_url",
+            timeout=.1
+        )
 
     def test_ioerror_download_url(self):
         """test_config | Download with unwritable target file.
