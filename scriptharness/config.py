@@ -18,11 +18,13 @@ import logging
 import os
 import requests
 from scriptharness.actions import Action
-from scriptharness.exceptions import ScriptHarnessException, to_unicode
+from scriptharness.exceptions import ScriptHarnessException, \
+    ScriptHarnessTimeout, to_unicode
 from scriptharness.structures import iterate_pairs
 import six
 import six.moves.urllib as urllib
 import sys
+import time
 
 
 LOGGER_NAME = "scriptharness.config"
@@ -125,6 +127,7 @@ def download_url(url, path=None, timeout=None):
     if timeout is None:
         timeout = 10
     try:
+        start_time = time.time()
         session = requests.Session()
         session.mount(url, requests.adapters.HTTPAdapter(max_retries=5))
         response = session.get(url, timeout=timeout, stream=True)
@@ -136,6 +139,9 @@ def download_url(url, path=None, timeout=None):
                     filehandle.flush()
         return path
     except requests.exceptions.RequestException as exc_info:
+        if time.time() >= start_time + timeout:
+            raise ScriptHarnessTimeout("Timeout downloading from url %s" % url,
+                                       exc_info)
         raise ScriptHarnessException("Error downloading from url %s" % url,
                                      exc_info)
     except IOError as exc_info:

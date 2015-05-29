@@ -68,6 +68,11 @@ class ScriptHarnessException(ScriptHarnessBaseException):
     """
 
 
+class ScriptHarnessTimeout(ScriptHarnessException):
+    """There was a timeout while running scriptharness.
+    """
+
+
 class ScriptHarnessError(ScriptHarnessBaseException):
     """User-facing exception.
 
