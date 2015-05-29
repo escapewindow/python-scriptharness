@@ -13,8 +13,7 @@ import os
 import requests
 from scriptharness.actions import Action
 import scriptharness.config as shconfig
-from scriptharness.exceptions import ScriptHarnessException, \
-    ScriptHarnessTimeout
+from scriptharness.exceptions import ScriptHarnessException
 import six
 import subprocess
 import sys
@@ -39,15 +38,41 @@ def cleanup():
         if os.path.exists(path):
             os.remove(path)
 
-def webserver_info():
+@contextmanager
+def start_webserver():
     """Start a webserver for local requests testing
     """
-    host = os.environ['SCRIPTHARNESS_WEBSERVER']
+    port = 8001
+    max_wait = 5
+    wait = 0
+    interval = .02
+    host = "http://localhost:%s" % str(port)
     dir_path = os.path.join(os.path.dirname(__file__), 'http')
-    return (dir_path, host)
+    file_path = os.path.join(dir_path, 'cgi_server.py')
+    proc = subprocess.Popen([sys.executable, file_path],
+                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    while wait < max_wait:
+        try:
+            response = requests.get(host)
+            if response.status_code == 200:
+                break
+        except requests.exceptions.ConnectionError:
+            pass
+        time.sleep(interval)
+        wait += interval
+    try:
+        yield (dir_path, host)
+    finally:
+        proc.terminate()
+        # make sure it goes away
+        try:
+            while True:
+                response = requests.get(host)
+        except requests.exceptions.ConnectionError:
+            pass
 
 # TestUrlFunctions {{{1
-class TestUrlFunctions(unittest.TestCase):
+class TestUrlFunctionss(unittest.TestCase):
     """Test url functions
     """
     def setUp(self):
@@ -83,56 +108,47 @@ class TestUrlFunctions(unittest.TestCase):
     @unittest.skipIf(os.name == 'nt' and six.PY3,
                      "OSError: [WinError 6] The handle is invalid "
                      "http://bugs.python.org/issue3905 ?")
-    @unittest.skipIf(not os.environ.get('SCRIPTHARNESS_WEBSERVER'),
-                     "SCRIPTHARNESS_WEBSERVER not set")
     def test_successful_download_url(self):
         """test_config | Download a file from a local webserver.
         """
-        (path, host) =  webserver_info()
-        with open(os.path.join(path, "test_config.json")) as filehandle:
-            orig_contents = filehandle.read()
-        shconfig.download_url("%s/test_config.json" % host, path=TEST_FILE)
+        with start_webserver() as (path, host):
+            with open(os.path.join(path, "test_config.json")) as filehandle:
+                orig_contents = filehandle.read()
+            shconfig.download_url("%s/test_config.json" % host, path=TEST_FILE)
         with open(TEST_FILE) as filehandle:
             contents = filehandle.read()
         self.assertEqual(contents, orig_contents)
 
-    @unittest.skipIf(not os.environ.get('SCRIPTHARNESS_WEBSERVER'),
-                     "SCRIPTHARNESS_WEBSERVER not set")
     def test_empty_download_url(self):
         """test_config | Download an empty file from a local webserver.
         """
-        (_, host) =  webserver_info()
-        shconfig.download_url("%s/empty_file" % host, path=TEST_FILE)
+        with start_webserver() as (_, host):
+            shconfig.download_url("%s/empty_file" % host, path=TEST_FILE)
         with open(TEST_FILE) as filehandle:
             contents = filehandle.read()
         self.assertEqual(contents, "")
 
     @unittest.skipIf(os.name == 'nt',
                      "windows downloads the cgi instead of running")
-    @unittest.skipIf(not os.environ.get('SCRIPTHARNESS_WEBSERVER'),
-                     "SCRIPTHARNESS_WEBSERVER not set")
     def test_timeout_download_url(self):
         """test_config | Time out in download_url()
         """
-        (_, host) =  webserver_info()
-        self.assertRaises(
-            ScriptHarnessTimeout,
-            #shconfig.download_url, "%s/cgi-bin/timeout.cgi" % host,
-            shconfig.download_url, "http://darksecretlove.com/sleep.cgi",
-            timeout=.1
-        )
+        with start_webserver() as (_, host):
+            self.assertRaises(
+                ScriptHarnessException,
+                shconfig.download_url, "%s/cgi-bin/timeout.cgi" % host,
+                timeout=.1
+            )
 
-    @unittest.skipIf(not os.environ.get('SCRIPTHARNESS_WEBSERVER'),
-                     "SCRIPTHARNESS_WEBSERVER not set")
     def test_ioerror_download_url(self):
         """test_config | Download with unwritable target file.
         """
-        (path, host) =  webserver_info()
-        self.assertRaises(
-            ScriptHarnessException,
-            shconfig.download_url,
-            "%s/test_config.json" % host, path=path
-        )
+        with start_webserver() as (path, host):
+            self.assertRaises(
+                ScriptHarnessException,
+                shconfig.download_url,
+                "%s/test_config.json" % host, path=path
+            )
 
     def test_parse_config_file(self):
         """test_config | parse json
@@ -144,17 +160,15 @@ class TestUrlFunctions(unittest.TestCase):
             config2 = json.load(filehandle)
         self.assertEqual(config, config2)
 
-    @unittest.skipIf(not os.environ.get('SCRIPTHARNESS_WEBSERVER'),
-                     "SCRIPTHARNESS_WEBSERVER not set")
     def test_parse_invalid_json(self):
         """test_config | Download invalid json and parse it
         """
-        (_, host) =  webserver_info()
-        self.assertRaises(
-            ScriptHarnessException,
-            shconfig.parse_config_file,
-            "%s/invalid_json.json" % host
-        )
+        with start_webserver() as (_, host):
+            self.assertRaises(
+                ScriptHarnessException,
+                shconfig.parse_config_file,
+                "%s/invalid_json.json" % host
+            )
 
     def test_parse_invalid_path(self):
         """test_config | Parse nonexistent file

@@ -1,9 +1,7 @@
 #!/bin/bash
 
 coverage erase
-python tests/http/cgi_server.py >/dev/null 2>&1 &
-trap "{ kill %; }" SIGINT SIGTERM SIGKILL EXIT
-SCRIPTHARNESS_WEBSERVER="http://localhost:8001" tox && coverage html && {
+tox && coverage html && {
     files=$(find tests scriptharness -type f -name \*.py)
     echo "Running pylint..."
     for file in $files ; do
