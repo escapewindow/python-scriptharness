@@ -5,5 +5,5 @@ import time
 print("Content-Type: text/html")
 print()
 
-time.sleep(5)
+time.sleep(300)
 print("Yawn")
