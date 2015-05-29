@@ -149,7 +149,7 @@ class TestUrlFunctionss(unittest.TestCase):
         mock_requests.Session.return_value = timeout
         self.assertRaises(
             ScriptHarnessTimeout,
-            shconfig.download_url, "http://fake_url",
+            shconfig.download_url, "http://%s" % TEST_FILE,
             timeout=.1
         )
 
