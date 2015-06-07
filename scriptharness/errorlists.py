@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""Error lists are used to parse output in scriptharness.log.OutputParser.
+"""Error tuples are used to parse output in scriptharness.log.OutputParser.
 
 Each line of output is matched against each substring or regular expression
-in the error list.  On a match, we determine the 'level' of that line.
+in the error tuple.  On a match, we determine the 'level' of that line.
 Levels are ints, and match the levels in the python logging module.  Negative
 levels are ignored.
 """
@@ -16,7 +16,7 @@ from scriptharness.exceptions import ScriptHarnessException, \
 import six
 
 
-# ErrorList helper methods {{{1
+# ErrorTuple helper methods {{{1
 def exactly_one(key1, key2, error_check, messages):
     """Make sure one, and only one, of key1 and key2 are in error_check.
     If that's not the case, append an error message in messages.
@@ -26,7 +26,7 @@ def exactly_one(key1, key2, error_check, messages):
 
       key2 (str): Dictionary key.
 
-      error_check (dict): a single item of error_list.
+      error_check (dict): a single item of error_tuple.
 
       messages (list): the list of error messages so far.
 
@@ -53,7 +53,7 @@ def verify_unicode(key, error_check, messages):
 
     Args:
       key (str): a dict key
-      error_check (dict): a single item of error_list
+      error_check (dict): a single item of error_tuple
       messages (list): The error messages so far
     """
     if key in error_check and not \
@@ -72,7 +72,7 @@ def check_ignore(strict, ignore, message, messages):
       ignore (bool): True when 'level' is in error_check and negative.
       name (str): The name of the key (pre_context_lines,
         post_context_lines)
-      error_check (dict): A single item of error_list
+      error_check (dict): A single item of error_tuple
       messages (list): The error messages so far.
     """
     if ignore and strict:
@@ -108,12 +108,12 @@ def check_context_lines(context_lines, orig_context_lines, name, messages):
     return max(context_lines, orig_context_lines)
 
 
-# ErrorList {{{1
-class ErrorList(list):
-    """Error lists, to describe how to parse output.  In object form for
+# ErrorTuple {{{1
+class ErrorTuple(tuple):
+    """Error tuples, to describe how to parse output.  In object form for
     better validation.
 
-    An example error_list::
+    An example error_tuple::
 
         [
             {
@@ -140,31 +140,31 @@ class ErrorList(list):
     lines above and 5 lines below this message.
 
     Attributes:
-      strict (bool): If True, be more strict about well-formed error_lists.
-      pre_context_lines (int): The max number of lines the error_list defines
+      strict (bool): If True, be more strict about well-formed error_tuples.
+      pre_context_lines (int): The max number of lines the error_tuple defines
         in pre_context_lines.
-      post_context_lines (int): The max number of lines the error_list defines
+      post_context_lines (int): The max number of lines the error_tuple defines
         in post_context_lines.
-      error_list (list of dicts): The error list.
+      error_tuple (tuple of dicts): The error tuple.
     """
-    def __init__(self, error_list, strict=True):
-        super(ErrorList, self).__init__(error_list)
+    def __init__(self, error_tuple, strict=True):
+        tuple.__init__(error_tuple)
         self.strict = strict
         (self.pre_context_lines, self.post_context_lines) = \
-            self.validate_error_list(error_list)
+            self.validate_error_tuple(error_tuple)
 
-    def validate_error_list(self, error_list):
-        """Validate an error_list.
+    def validate_error_tuple(self, error_tuple):
+        """Validate an error_tuple.
         This is going to be a pain to unit test properly.
 
         Args:
-          error_list (list of dicts): an error_list.
+          error_tuple (tuple of dicts): an error_tuple.
 
         Returns:
           (pre_context_lines, post_context_lines) (tuple of int, int)
 
         Raises:
-          scriptharness.exceptions.ScriptHarnessException: if error_list is not
+          scriptharness.exceptions.ScriptHarnessException: if error_tuple is not
             well-formed.
         """
         messages = []
@@ -172,7 +172,7 @@ class ErrorList(list):
         re_compile_class = context_lines_re.__class__
         pre_context_lines = 0
         post_context_lines = 0
-        for error_check in error_list:
+        for error_check in error_tuple:
             ignore = False
             error_check_str = six.text_type(error_check)
             if not isinstance(error_check, dict):
@@ -230,14 +230,14 @@ class ErrorList(list):
         return (pre_context_lines, post_context_lines)
 
 
-# ErrorLists {{{1
+# ErrorTuples {{{1
 # These are largely taken from mozharness.
-BASE_ERROR_LIST = ErrorList([{
+BASE_ERROR_TUPLE = ErrorTuple([{
     'substr': 'command not found', 'level': logging.ERROR
 }])
 
 # For ssh, scp, rsync over ssh
-SSH_ERROR_LIST = ErrorList(BASE_ERROR_LIST[:] + [
+SSH_ERROR_TUPLE = ErrorTuple(list(BASE_ERROR_TUPLE) + [
     {'substr': 'Name or service not known', 'level': logging.ERROR},
     {'substr': 'Could not resolve hostname', 'level': logging.ERROR},
     {'substr': 'POSSIBLE BREAK-IN ATTEMPT', 'level': logging.WARNING},
@@ -257,7 +257,7 @@ SSH_ERROR_LIST = ErrorList(BASE_ERROR_LIST[:] + [
      'level': logging.ERROR},
 ])
 
-HG_ERROR_LIST = ErrorList(BASE_ERROR_LIST[:] + [{
+HG_ERROR_TUPLE = ErrorTuple(list(BASE_ERROR_TUPLE) + [{
     'regex': re.compile(r'^abort:'),
     'level': logging.ERROR,
     'explanation': 'Automation Error: hg not responding'
@@ -271,7 +271,7 @@ HG_ERROR_LIST = ErrorList(BASE_ERROR_LIST[:] + [{
     'explanation': 'Automation Error: hg extension missing'
 }])
 
-GIT_ERROR_LIST = ErrorList(BASE_ERROR_LIST[:] + [
+GIT_ERROR_TUPLE = ErrorTuple(list(BASE_ERROR_TUPLE) + [
     {'substr': 'Permission denied (publickey).', 'level': logging.ERROR},
     {'substr': 'fatal: The remote end hung up unexpectedly',
      'level': logging.ERROR},
@@ -290,7 +290,7 @@ GIT_ERROR_LIST = ErrorList(BASE_ERROR_LIST[:] + [
      'level': logging.ERROR},
 ])
 
-PYTHON_ERROR_LIST = ErrorList(BASE_ERROR_LIST[:] + [
+PYTHON_ERROR_TUPLE = ErrorTuple(list(BASE_ERROR_TUPLE) + [
     {'regex': re.compile(r'Warning:.*Error: '), 'level': logging.WARNING},
     {'substr': 'Traceback (most recent call last)', 'level': logging.ERROR},
     {'substr': 'SyntaxError: ', 'level': logging.ERROR},
@@ -301,7 +301,7 @@ PYTHON_ERROR_LIST = ErrorList(BASE_ERROR_LIST[:] + [
     {'regex': re.compile(r'raise \w*Error: '), 'level': logging.CRITICAL},
 ])
 
-VIRTUALENV_ERROR_LIST = ErrorList([
+VIRTUALENV_ERROR_TUPLE = ErrorTuple([
     {'substr': 'not found or a compiler error:', 'level': logging.WARNING},
     {'regex': re.compile(r'\d+: error: '), 'level': logging.ERROR},
     {'regex': re.compile(r'\d+: warning: '), 'level': logging.WARNING},
@@ -311,9 +311,9 @@ VIRTUALENV_ERROR_LIST = ErrorList([
         ),
         'level': logging.DEBUG
     },
-] + PYTHON_ERROR_LIST[:])
+] + list(PYTHON_ERROR_TUPLE))
 
-MAKE_ERROR_LIST = ErrorList(PYTHON_ERROR_LIST[:] + [
+MAKE_ERROR_TUPLE = ErrorTuple(list(PYTHON_ERROR_TUPLE) + [
     {'substr': 'No rule to make target ', 'level': logging.ERROR},
     {'regex': re.compile(r'akefile.*was not found\.'), 'level': logging.ERROR},
     {'regex': re.compile(r'Stop\.$'), 'level': logging.ERROR},
@@ -326,7 +326,7 @@ MAKE_ERROR_LIST = ErrorList(PYTHON_ERROR_LIST[:] + [
     {'substr': 'Warning: ', 'level': logging.WARNING},
 ])
 
-TAR_ERROR_LIST = ErrorList(BASE_ERROR_LIST[:] + [
+TAR_ERROR_TUPLE = ErrorTuple(list(BASE_ERROR_TUPLE) + [
     {'substr': '(stdin) is not a bzip2 file.', 'level': logging.ERROR},
     {'regex': re.compile(r'Child returned status [1-9]'),
      'level': logging.ERROR},
@@ -340,14 +340,14 @@ TAR_ERROR_LIST = ErrorList(BASE_ERROR_LIST[:] + [
      'level': logging.ERROR},
 ])
 
-ADB_ERROR_LIST = ErrorList(BASE_ERROR_LIST[:] + [
+ADB_ERROR_TUPLE = ErrorTuple(list(BASE_ERROR_TUPLE) + [
     {'substr': 'INSTALL_FAILED_', 'level': logging.ERROR},
     {'substr': 'Android Debug Bridge version', 'level': logging.ERROR},
     {'substr': 'error: protocol fault', 'level': logging.ERROR},
     {'substr': 'unable to connect to ', 'level': logging.ERROR},
 ])
 
-JARSIGNER_ERROR_LIST = ErrorList([{
+JARSIGNER_ERROR_TUPLE = ErrorTuple([{
     'substr': 'command not found',
     'level': logging.CRITICAL, 'exception': ScriptHarnessFatal,
 }, {
@@ -374,7 +374,7 @@ JARSIGNER_ERROR_LIST = ErrorList([{
     'explanation': 'The apk is missing!',
 }])
 
-ZIP_ERROR_LIST = ErrorList(BASE_ERROR_LIST[:] + [{
+ZIP_ERROR_TUPLE = ErrorTuple(list(BASE_ERROR_TUPLE) + [{
     'substr': 'zip warning:',
     'level': logging.WARNING,
 }, {
@@ -385,7 +385,7 @@ ZIP_ERROR_LIST = ErrorList(BASE_ERROR_LIST[:] + [{
     'level': logging.ERROR,
 }])
 
-ZIPALIGN_ERROR_LIST = ErrorList(BASE_ERROR_LIST[:] + [{
+ZIPALIGN_ERROR_TUPLE = ErrorTuple(list(BASE_ERROR_TUPLE) + [{
     'regex': re.compile(r'Unable to open .* as a zip archive'),
     'level': logging.ERROR,
 }, {
