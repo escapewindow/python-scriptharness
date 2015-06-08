@@ -26,10 +26,12 @@ if sys.version_info < (2, 7) or (sys.version_info[0] == 3 and
 
 
 def get_dependencies():
-    """Dependency list
+    """Dependency list.
+
+    Windows Py3 requires win_unicode_console
     """
     dependencies = ['requests', 'six', 'psutil']
-    if os.name == 'nt':
+    if os.name == 'nt' and sys.version_info[0] > 2:
         dependencies.append('win_unicode_console')
 
 

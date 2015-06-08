@@ -1,0 +1,3 @@
+# win_unicode_console is required for windows python3
+-r requirements.txt
+win_unicode_console
