@@ -10,8 +10,8 @@ import subprocess
 import sys
 
 
+# Version
 PATH = os.path.join(os.path.dirname(__file__), "version.json")
-
 if not os.path.exists(PATH):
     subprocess.check_call(
         [sys.executable, os.path.join(os.path.dirname(__file__),
@@ -19,15 +19,24 @@ if not os.path.exists(PATH):
     )
 with open(PATH) as filehandle:
     VERSION = json.load(filehandle)['version_string']
-
 if sys.version_info < (2, 7) or (sys.version_info[0] == 3 and
                                  sys.version_info[1] < 3):
     print('ERROR: scriptharness requires Python 2.7 or 3.3+! Exiting...')
     sys.exit(1)
 
+
+def get_dependencies():
+    """Dependency list
+    """
+    dependencies = ['requests', 'six', 'psutil']
+    if os.name == 'nt':
+        dependencies.append('win_unicode_console')
+
+
 def read(fname):
     """http://pythonhosted.org/an_example_pypi_project/setuptools.html"""
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
+
 
 setup(
     name='scriptharness',
@@ -41,7 +50,7 @@ setup(
     packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
     include_package_data=True,
     zip_safe=False,
-    install_requires=['requests', 'six', 'psutil'],
+    install_requires=get_dependencies(),
     entry_points="""
 # -*- Entry points: -*-
 """,

@@ -21,12 +21,12 @@ from scriptharness.errorlists import ErrorList
 from scriptharness.exceptions import ScriptHarnessException, \
     ScriptHarnessError
 import scriptharness.log as log
-import six
 import unittest
 from . import UNICODE_STRINGS, LOGGER_NAME, LoggerReplacement, \
               stdstar_redirected
 
 if os.name == 'nt':
+    import win_unicode_console
     WINDOWS = True
 else:
     WINDOWS = False
@@ -516,13 +516,11 @@ class TestUnicode(unittest.TestCase):
         logger.addHandler(console_handler)
         return logger
 
-    @unittest.skipIf(
-        os.name == 'nt' and six.PY3, r"""'\u65e5\u672c\u8a9e' != '' """
-        "http://bugs.python.org/issue1602 ?"
-    )
     def test_unicode_file(self):
         """test_log | unicode strings to a file
         """
+        if WINDOWS:
+            win_unicode_console.enable()
         for string in UNICODE_STRINGS:
             with stdstar_redirected(TEST_CONSOLE):
                 with self.get_file_logger() as logger:
@@ -531,14 +529,11 @@ class TestUnicode(unittest.TestCase):
                 line = filehandle.read().rstrip()
                 self.assertEqual(string, line)
 
-    @unittest.skipIf(
-        os.name == 'nt' and six.PY3,
-        r"""'\u65e5\u672c\u8a9e' != '\\u65e5\\u672c\\u8a9e' """
-        "http://bugs.python.org/issue1602 ?"
-    )
     def test_unicode_console(self):
         """test_log | bare unicode strings to a console
         """
+        if WINDOWS:
+            win_unicode_console.enable()
         for string in UNICODE_STRINGS:
             with stdstar_redirected(TEST_CONSOLE):
                 logger = self.get_console_logger()
