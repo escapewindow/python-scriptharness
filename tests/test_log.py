@@ -21,16 +21,9 @@ from scriptharness.errorlists import ErrorList
 from scriptharness.exceptions import ScriptHarnessException, \
     ScriptHarnessError
 import scriptharness.log as log
-import six
 import unittest
 from . import UNICODE_STRINGS, LOGGER_NAME, LoggerReplacement, \
               stdstar_redirected
-
-if os.name == 'nt' and six.PY3:
-    import win_unicode_console
-    WIN_UNICODE = True
-else:
-    WIN_UNICODE = False
 
 
 TEST_FILE = '_test_log_file'
@@ -520,8 +513,6 @@ class TestUnicode(unittest.TestCase):
     def test_unicode_file(self):
         """test_log | unicode strings to a file
         """
-        if WIN_UNICODE:
-            win_unicode_console.enable()
         for string in UNICODE_STRINGS:
             with stdstar_redirected(TEST_CONSOLE):
                 with self.get_file_logger() as logger:
@@ -533,8 +524,6 @@ class TestUnicode(unittest.TestCase):
     def test_unicode_console(self):
         """test_log | bare unicode strings to a console
         """
-        if WIN_UNICODE:
-            win_unicode_console.enable()
         for string in UNICODE_STRINGS:
             with stdstar_redirected(TEST_CONSOLE):
                 logger = self.get_console_logger()

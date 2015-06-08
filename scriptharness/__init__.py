@@ -22,6 +22,12 @@ from scriptharness.exceptions import ScriptHarnessException
 from scriptharness.log import prepare_simple_logging
 import scriptharness.script
 from scriptharness.structures import iterate_pairs
+import six
+
+if os.name == 'nt' and six.PY3:
+    import win_unicode_console
+    win_unicode_console.enable()
+
 
 __all__ = [
     'get_script', 'get_config', 'get_actions', 'get_actions_from_list',
