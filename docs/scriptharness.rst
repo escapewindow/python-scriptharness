@@ -11,8 +11,8 @@ Submodules
    scriptharness.config
    scriptharness.errorlists
    scriptharness.exceptions
+   scriptharness.files
    scriptharness.log
-   scriptharness.os
    scriptharness.process
    scriptharness.script
    scriptharness.status

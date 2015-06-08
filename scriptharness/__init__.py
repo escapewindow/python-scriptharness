@@ -16,24 +16,17 @@ The top-level module has two main purposes:
 from __future__ import absolute_import, division, print_function, \
                        unicode_literals
 import os
-import scriptharness.actions
+from scriptharness.actions import Action
 from scriptharness.config import get_parser
 from scriptharness.exceptions import ScriptHarnessException
 from scriptharness.log import prepare_simple_logging
-import scriptharness.script
+from scriptharness.script import Script
 from scriptharness.structures import iterate_pairs
 import six
 
 if os.name == 'nt' and six.PY3:
     import win_unicode_console
     win_unicode_console.enable()
-
-
-__all__ = [
-    'get_script', 'get_config', 'get_actions', 'get_actions_from_list',
-    'get_logger', 'get_parser', 'prepare_simple_logging',
-    'set_action_class', 'set_script_class',
-]
 
 
 # ScriptManager {{{1
@@ -48,8 +41,8 @@ class ScriptManager(object):
     """
     def __init__(self):
         self.all_scripts = {}
-        self.script_class = scriptharness.script.Script
-        self.action_class = scriptharness.actions.Action
+        self.script_class = Script
+        self.action_class = Action
 
     def get_script(self, *args, **kwargs):
         """Back end for scriptharness.get_script().

@@ -10,7 +10,7 @@ from __future__ import absolute_import, division, print_function, \
 import logging
 import os
 
-LOGGER_NAME = "scriptharness.commands.os"
+LOGGER_NAME = "scriptharness.files"
 
 
 def makedirs(path, level=logging.INFO, context=None):

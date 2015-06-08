@@ -5,7 +5,7 @@
 from __future__ import absolute_import, division, print_function, \
                        unicode_literals
 import os
-import scriptharness.os as sh_os
+import scriptharness.files as sh_files
 import shutil
 import unittest
 from . import LoggerReplacement
@@ -49,13 +49,13 @@ class TestFunctions(unittest.TestCase):
         """
         context = TestContext()
         self.assertFalse(os.path.exists(TEST_DIR))
-        sh_os.make_parent_dir(os.path.join(TEST_DIR, "foo", "bar"),
-                              context=context)
+        sh_files.make_parent_dir(os.path.join(TEST_DIR, "foo", "bar"),
+                                 context=context)
         self.assertTrue(os.path.isdir(os.path.join(TEST_DIR, "foo")))
         messages = context.logger.all_messages[:]
         # This should be noop; verifying by no change in all_messages
-        sh_os.make_parent_dir(TEST_DIR, context=context)
+        sh_files.make_parent_dir(TEST_DIR, context=context)
         self.assertEqual(messages, context.logger.all_messages)
         # This should also be noop.  Boo hardcoded string.
-        sh_os.makedirs(TEST_DIR, context=context)
+        sh_files.makedirs(TEST_DIR, context=context)
         self.assertEqual(context.logger.all_messages[-1][1], "Already exists.")

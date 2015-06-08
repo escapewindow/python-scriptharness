@@ -16,7 +16,7 @@ from copy import deepcopy
 import logging
 import os
 from scriptharness.exceptions import ScriptHarnessException
-from scriptharness.os import make_parent_dir
+from scriptharness.files import make_parent_dir
 from scriptharness.unicode import to_unicode
 import six
 import time

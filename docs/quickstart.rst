@@ -5,7 +5,7 @@ Quickstart
 
 Here's an example script.  The file is also viewable here_.
 
-.. _here: https://github.com/scriptharness/python-scriptharness/blob/master/examples/quickstart.py
+.. _here: https://github.com/scriptharness/python-scriptharness/blob/win_unicode/examples/quickstart.py
 
 ::
 
@@ -128,6 +128,8 @@ If you run this without any arguments, you might get output like this::
 
     $ ./quickstart.py
     00:00:00     INFO - Starting at 2015-05-25 00:00 PDT.
+    00:00:00     INFO - Enabled actions:
+    00:00:00     INFO -  pull, build, package
     00:00:00     INFO - {'new_argument': None,
     00:00:00     INFO -  'scriptharness_artifact_dir': '/src/python-scriptharness/docs/artifacts',
     00:00:00     INFO -  'scriptharness_base_dir': '/src/python-scriptharness/docs',
@@ -167,6 +169,8 @@ You can change which actions are run via the ``--actions`` option::
 
     $ ./quickstart.py --actions package upload notify
     00:00:05     INFO - Starting at 2015-05-25 00:00 PDT.
+    00:00:05     INFO - Enabled actions:
+    00:00:05     INFO -  package, upload, notify
     00:00:05     INFO - {'new_argument': None,
     00:00:05     INFO -  'scriptharness_artifact_dir': '/src/python-scriptharness/docs/artifacts',
     00:00:05     INFO -  'scriptharness_base_dir': '/src/python-scriptharness/docs',
@@ -199,12 +203,12 @@ If you want to list which actions are available, and which are enabled by
 default, use the ``--list-actions`` option::
 
     $ ./quickstart.py --list-actions
-      clobber
-    * pull
-    * build
-    * package
-      upload
-      notify
+      clobber ['all']
+    * pull ['all']
+    * build ['all']
+    * package ['all']
+      upload ['all']
+      notify ['all']
 
 
 #############
@@ -234,7 +238,9 @@ You can always use the ``--help`` option::
 
     $ ./quickstart.py --help
     usage: quickstart.py [-h] [--list-actions] [--actions ACTION [ACTION ...]]
-                         [--config-file CONFIG_FILE]
+                         [--skip-actions ACTION [ACTION ...]]
+                         [--add-actions ACTION [ACTION ...]]
+                         [--action-group {all,none}] [--config-file CONFIG_FILE]
                          [--opt-config-file CONFIG_FILE] [--dump-config]
                          [--new-argument NEW_ARGUMENT]
     
@@ -244,6 +250,12 @@ You can always use the ``--help`` option::
                             exit.
       --actions ACTION [ACTION ...]
                             Specify the actions to run.
+      --skip-actions ACTION [ACTION ...]
+                            Specify the actions to skip.
+      --add-actions ACTION [ACTION ...]
+                            Specify the actions to add to the default set.
+      --action-group {all,none}
+                            Specify the action group to use.
       --config-file CONFIG_FILE, --cfg CONFIG_FILE, -c CONFIG_FILE
                             Specify required config files/urls
       --opt-config-file CONFIG_FILE, --opt-cfg CONFIG_FILE

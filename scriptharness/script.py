@@ -21,7 +21,7 @@ import logging
 import os
 import pprint
 from scriptharness.actions import Action
-from scriptharness.os import make_parent_dir
+from scriptharness.files import make_parent_dir
 import scriptharness.config as shconfig
 from scriptharness.exceptions import ScriptHarnessException, ScriptHarnessFatal
 from scriptharness.structures import iterate_pairs, LoggingDict, ReadOnlyDict
@@ -94,7 +94,7 @@ def enable_actions(parsed_args, actions):
 
     Args:
       parsed_args (argparse Namespace)
-      actions (list of Actions)
+      actions (list of scriptharness.actions.Actions)
     """
     args = parsed_args.__dict__
     if args.get('scriptharness_volatile_action_group') is not None:
